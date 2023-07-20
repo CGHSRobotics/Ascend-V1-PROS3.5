@@ -38,19 +38,6 @@ namespace ace
 	bool partner_connected = false;
 	bool is_red_alliance = false;
 
-	float launch_speed = LAUNCH_SPEED;
-
-	util::timer endgame_timer(200);
-	util::timer intake_timer(2000);
-
-	// leds
-	pros::ADILed led(PORT_LED, 60);
-
-	A_Motor launcherMotor(PORT_LAUNCHER, MOTOR_GEARSET_06, false);
-
-	A_Motor intakeMotorLeft(PORT_INTAKE, MOTOR_GEARSET_18, false);
-
-	A_Motor intakeMotorRight(PORT_INTAKE_RIGHT,MOTOR_GEARSET_18, false);
 
 	/* ========================================================================== */
 	/*                              Class Definitions                             */
@@ -68,11 +55,12 @@ namespace ace
 	}
 	float A_Motor::get_temp()
 	{
-
+		init();
 		return util::cel_to_faren(get_temperature());
 	}
 	void A_Motor::spin_percent(float percent)
 	{
+		init();
 
 		if (std::abs(percent) <= 5)
 		{
@@ -99,7 +87,7 @@ namespace ace
 	}
 	float A_Motor::get_percent_velocity()
 	{
-
+		init();
 		if (get_gearing() == MOTOR_GEARSET_06)
 		{
 			return get_actual_velocity() / 6.0f;
@@ -120,7 +108,7 @@ namespace ace
 	}
 	float A_Motor::get_percent_torque()
 	{
-
+		init();
 		if (get_gearing() == MOTOR_GEARSET_06)
 		{
 			return get_torque() * 6.0f / 2.1f * 100.0f;
@@ -213,191 +201,12 @@ namespace ace
 	/*                             User Control Stuffs                            */
 	/* -------------------------------------------------------------------------- */
 
-	bool curr_launching = false;
-	util::timer long_launch_timer(500);
-
-
-	//launch triball
-	
-	void launch(float speed){
-		launcherMotor.move_voltage(speed * 120);
-		pros::delay(10000);
-		launcherMotor.move_voltage(speed * -120 );
-		//This will vary as we need to also counteract the + motion of the motor
-		pros::delay(20000);
-		launcherMotor.move_voltage(0);
-
-	}
-	// Launch disks
-	/*
-	void launch(float speed, bool isLong)
-	{
-		long_launch_timer.update(ez::util::DELAY_TIME);
-		// if lower than speed
-		if (!curr_launching && launcherMotor.get_actual_velocity() < (speed - LAUNCHER_SPEED_CUTOFF) * 6.0)
-		{
-			launcherMotor.move_voltage(12000);
-			intakeMotor.spin_percent(100);
-			return;
-		}
-		// wait for angle auto target
-		else if (!curr_launching && auto_targeting_enabled && std::abs(theta) >= 2.0 || !long_launch_timer.done())
-		{
-			launcherMotor.move_voltage(speed * 120.0);
-			intakeMotor.spin_percent(100);
-			return;
-		}
-		// FIRE ZE WEAPON
-		else
-		{
-			// fire rapidly no matter what if target speed  cvis under 80 while button is held
-			if (!isLong)
-			{
-				curr_launching = true;
-			}
-
-			// if speed drops while rapid firing, boost voltage to 100% to supplement speed loss
-			if (launcherMotor.get_actual_velocity() < (speed - 5.0) * 6.0)
-			{
-				launcherMotor.move_voltage(12000);
-				//12000 initial, causes slight issues 
-			}
-			else
-			{
-				launcherMotor.move_voltage(speed * 120.0);
-			}
-
-			intakeMotor.spin_percent(-100);
-		}
-	}
-*/
-
-	// launch standby
-	void launch_standby(bool enabled, float speed)
-	{
-		curr_launching = false;
-		if (enabled)
-			launcherMotor.move_velocity(speed * 6);
-		else
-			launcherMotor.move_velocity(0);
-	}
-
 	// reset motors to 0 voltage
 	void reset_motors()
-	{	
-		launcherMotor.move_voltage(0);
-		intakeMotorLeft.move_voltage(0);
-		intakeMotorRight.move_voltage(0);
-	
-
-		launcher_standby_enabled = false;
-
-		endgamePneumatics.set_value(false);
-		flapPneumatics.set_value(false);
-	}
-
-	// toggles flap
-	void flap_toggle(bool enabled)
 	{
-		if (enabled)
-		{
-			flapPneumatics.set_value(1);
-		}
-		else
-		{
-			flapPneumatics.set_value(0);
-		}
+
+
 	}
-
-	// toggles endgame
-	void endgame_toggle(bool enabled)
-	{
-		if (enabled)
-		{
-			endgame_timer.reset();
-			endgamePneumatics.set_value(1);
-			return;
-		}
-		else
-		{
-			if (endgame_timer.done())
-			{
-				endgamePneumatics.set_value(0);
-				return;
-			}
-
-			endgame_timer.update(20);
-			endgamePneumatics.set_value(1);
-		}
-	}
-
-
-
-	void intake_toggle(bool enabled)
-	{
-		// intake enabled
-		if (enabled)
-		{
-			intakeMotorLeft.spin_percent(INTAKE_SPEED);
-			intakeMotorRight.spin_percent(INTAKE_SPEED);
-		}
-
-		// Not enabled
-		else
-		{
-			intake_timer.reset();
-			intakeMotorLeft.spin_percent(0);
-			intakeMotorRight.spin_percent(0);
-		}
-	}
-
-	void intake_reverse()
-	{
-		intakeMotorLeft.spin_percent(-INTAKE_SPEED);
-		intakeMotorRight.spin_percent(-INTAKE_SPEED);
-	}
-
-	/* ------------------------------ Vision Sensor ----------------------------- */
-	double theta = 0;
-	void auto_target(bool enabled)
-	{
-		int id = (is_red_alliance) ? 1 : 2;
-		pros::vision_object_s_t goal = visionSensor.get_by_sig(0, id);
-
-
-		theta = (((double)(goal.x_middle_coord) / ((double)VISION_FOV_WIDTH / 2.0)) * 30.0) + auto_target_angle_adjustment;
-
-		if (enabled && std::abs(theta) > 1 && std::abs(theta) <= 30)
-		{
-			chassis.reset_gyro();
-			chassis.set_turn_pid(theta, 0.5 * 127.0);
-		}
-	}
-/*   
-	/* ------------------------------ Light Sensor ------------------------------ */
-	int ambient_light = 0;
-	float light_diff_factor = 1.2;
-
-	bool current_detecting = false;
-
-	bool light_sensor_detect()
-	{
-		// if is detecting disk
-		if ((lightSensor.get_value() >= ambient_light * light_diff_factor)) {
-			current_detecting = true;
-		}
-		// no disk
-		else {
-			if (current_detecting)
-			{
-				current_detecting = false;
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 
 
 	/* -------------------------------------------------------------------------- */
@@ -502,63 +311,4 @@ namespace ace
 		new_haptic_request_is_master = is_master;
 		cntr_haptic_text = new_haptic;
 	}
-
-	/* ========================================================================== */
-	/*                                Update LED's                                */
-	/* ========================================================================== */
-
-	/*led_state_t curr_led_state = led_idle;
-
-	bool led_task_init = false;
-
-	void update_leds_task()
-	{
-
-		led_state_t curr_state = led_idle;
-
-		util::timer led_intake_timer(2000);
-
-		while (1)
-		{
-
-			int color = (ace::is_red_alliance) ? ace::led_color_red : ace::led_color_blue;
-			int color_bright = (ace::is_red_alliance) ? ace::led_color_red_bright : ace::led_color_blue_bright;
-
-			// check if state changed
-			if (curr_led_state != curr_state)
-			{
-				curr_state = curr_led_state;
-
-				if (curr_state == led_idle)
-				{
-					led.set_all(color);
-				}
-			}
-
-			// check if either intake or launch state
-			if (curr_led_state == led_intake)
-			{
-				int arr[led.length()] = {};
-
-				int index = (int)((float)led.length()) * (led_intake_timer.currTime / led_intake_timer.maxTime);
-
-				for (int i = 0; i < led.length(); i++)
-				{
-
-					if (i == index)
-					{
-						arr[i] = color_bright;
-					}
-					else
-					{
-						arr[i] = color;
-					}
-				}
-
-				led_intake_timer.update(10);
-			}
-
-			pros::delay(10);
-		}
-	}*/
 }

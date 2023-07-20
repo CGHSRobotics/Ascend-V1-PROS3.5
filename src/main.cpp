@@ -2,19 +2,12 @@
 #include "lvgl.cpp"
 
 /*
+	Commands for stack trace:
+
 	arm-none-eabi-addr2line -faps -e ./bin/hot.package.elf
-	arm-none-eabi-addr2line -faps -e ./bin/cold.package.elf
 	arm-none-eabi-addr2line -faps -e ./bin/cold.package.elf
 */
 
-/*
-	0x38332ec
-		0x383333c
-		0x78035f0
-		0x3854e10
-		0x38532fc
-		0x384d78c
-*/
 
 /* ========================================================================== */
 /*                                 Initialize                                 */
@@ -37,25 +30,13 @@ void initialize()
 	// init flap
 	lv_label_set_text(ace::lvgl::label_load_flap, "Init Flap       -  OK");
 
-	// clear screen on master controller
-	//ace::__task_update_leds_task.set_priority(TASK_PRIORITY_DEFAULT - 2);
-	//ace::led.set_all(ace::led_color_red_bright);
-
 	ace::__task_update_cntr_task.set_priority(TASK_PRIORITY_DEFAULT - 1);
 
 	lv_label_set_text(ace::lvgl::label_load_shenan, "Init Shenan     -  OK");
 
 	// init chassis
 	chassis.initialize();
-	ace::intakeMotorLeft.init();
-	ace::intakeMotorRight.init();
-	ace::launcherMotor.init();
 	pros::lcd::shutdown();
-
-	ace::endgame_timer.currTime = ace::endgame_timer.maxTime + 100;
-
-	// get ambient light sample
-	ace::ambient_light = ace::lightSensor.get_value();
 
 	// Go to main screen
 	lv_label_set_text(ace::lvgl::label_load_imu, "IMU Calibrate -  OK");
@@ -114,62 +95,6 @@ void opcontrol()
 
 		/* -------------------------------- Get Input ------------------------------- */
 
-		// Intake Toggle
-		if (ace::btn_intake_toggle.get_press_new())
-		{
-			ace::intake_enabled = !ace::intake_enabled;
-			if (ace::intake_enabled)
-			{
-				ace::update_cntr_haptic("-", false);
-			}
-		}
-
-		//ace::intake_enabled = ace::btn_intake_toggle.get_press();
-
-		// Intake Reverse
-		if (ace::btn_intake_reverse.get_press())
-		{
-			ace::intake_enabled = false;
-			ace::intake_reverse_enabled = true;
-		}
-		else
-		{
-			ace::intake_reverse_enabled = false;
-		}
-	/*
-		// Launcher Short
-		bool temp = ace::launch_short_enabled;
-		ace::launch_short_enabled = ace::btn_launch_short.get_press();
-		if (!ace::launch_short_enabled && temp)
-		{
-			ace::update_cntr_haptic("-", false);
-		}
-
-
-		// Launcher Short
-		ace::launch_long_enabled = ace::btn_launch_long.get_press();
-	*/
-		// Endgame Enabled
-		ace::endgame_enabled = ace::btn_endgame.get_press();
-
-		// Standby Enabled
-		if (ace::btn_standby.get_press_new())
-		{
-			ace::launcher_standby_enabled = !ace::launcher_standby_enabled;
-		}
-
-		// auto targeting toggle
-		if (ace::btn_auto_targeting.get_press_new())
-		{
-			ace::auto_targeting_enabled = !ace::auto_targeting_enabled;
-		}
-
-		// auto targeting toggle
-		if (ace::btn_flap.get_press_new())
-		{
-			ace::flap_enabled = !ace::flap_enabled;
-		}
-
 		// Auton Page Up
 		if (ace::btn_auton.get_press_new())
 		{
@@ -181,113 +106,19 @@ void opcontrol()
 		{
 			ace::is_red_alliance = !ace::is_red_alliance;
 		}
-		/*
-		// Launcher Speed Short
-		if (ace::btn_launch_speed_short.get_press_new())
-			ace::launch_speed = ace::LAUNCH_SPEED_SHORT;
 
-		// Launcher Speed Long
-		if (ace::btn_launch_speed_long.get_press_new())
-			ace::launch_speed = ace::LAUNCH_SPEED_LONG;
-		*/
-		// Launcher Speed Increase
-		if (ace::btn_launch_speed_increase.get_press_new())
-			ace::launch_speed += 2.5;
-
-		// Launcher Speed Decrease
-		if (ace::btn_launch_speed_decrease.get_press_new())
-			ace::launch_speed -= 2.5;
-
-		// Light Sensor
-		if (ace::light_sensor_detect())
-		{
-			ace::update_cntr_haptic(".");
-		}
 
 		/* --------------------------- Chassis Tank Drive --------------------------- */
-		/*
-		if (ace::auto_targeting_enabled && ace::launch_short_enabled)
-		{
-			ace::auto_target(true);
-
-			// auto brake yes
-			chassis.set_active_brake(0.1);
-		}
-		else
-		{
-			ace::auto_target(false);
-			// auto brake no
-			chassis.set_active_brake(0);
-		*/
-			chassis.tank();
-		
-		
+		chassis.tank();
 
 		/* ------------------------------ User Control ------------------------------ */
-
+		// for loop exists just so you can break from it if you want to skip all else
 		for (int i = 0; i < 1; i++)
 		{
-
-			// 
-			//ace::endgame_toggle(ace::endgame_enabled);
-
-			// flap
-			//ace::flap_toggle(ace::flap_enabled);
-
-			// Launch Short
-			/*
-			if (ace::launch_short_enabled)
-			{
-				ace::launch(ace::launch_speed, false);
-				break;
-			}
-			*/
-
-			// Launch Long
-			/*
-			if (ace::launch_long_enabled)
-			{
-				ace::launch(ace::launch_speed, true);
-				break;
-			}
-			*/
-			// launcher standby
-			ace::launch_standby(ace::launcher_standby_enabled, ace::launch_speed);
-
-
-			// Intake Reverse
-			if (ace::intake_reverse_enabled)
-			{
-				ace::intake_reverse();
-				break;
-			}
-
-			// Intake Toggle
-			if (ace::intake_enabled)
-			{
-				ace::intake_toggle(true);
-				break;
-			}
-			else
-			{
-				ace::intakeMotorRight.spin_percent(0);
-				ace::intakeMotorLeft.spin_percent(0);
-			}
+			// Do motory things in order of priority
 		}
 
 		/* ------------------------- Controller Screen Draw ------------------------- */
-		//Temporary solution, will only display temp of intake motor 1
-		// Line 1 - Master
-		ace::update_cntr_text(ace::cntr_master, 0,
-			(std::string)"Master" +
-			"  " + std::to_string((int)ace::intakeMotorLeft.get_temp()) + "F" +
-			"  " + std::to_string((int)pros::battery::get_capacity()) + "%");
- 
-		// Line 1 - Partner
-		ace::update_cntr_text(ace::cntr_partner, 0,
-			(std::string)"Partner" +
-			"  " + std::to_string((int)ace::intakeMotorLeft.get_temp()) + "F" +
-			"  " + std::to_string((int)pros::battery::get_capacity()) + "%");
 
 		// Line 2
 		std::string ally_str = "";
@@ -313,21 +144,15 @@ void opcontrol()
 		{
 			auton_string = "sk";
 		}
-		
+
 		ace::update_cntr_text(ace::cntr_both, 1,
-			"auto? " + ace::util::bool_to_str(ace::auto_targeting_enabled) +
-			" l? " + std::to_string((int)ace::launch_speed) +
 			" " + auton_string +
 			" " + ally_str);
-		
-		// Line 3
-		/*
-		ace::update_cntr_text(ace::cntr_both, 2,
-			(std::string)"idle? " + ace::util::bool_to_str(ace::launcher_standby_enabled) +
-			"  flap? " + ace::util::bool_to_str(ace::flap_enabled));
-		*/
-		/* ---------------------------------- Delay --------------------------------- */
 
+		// Line 3
+
+
+		/* ---------------------------------- Delay --------------------------------- */
 		pros::delay(ez::util::DELAY_TIME);
 	}
 }

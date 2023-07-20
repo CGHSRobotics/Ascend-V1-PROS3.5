@@ -175,7 +175,7 @@ namespace ace::lvgl {
 			if (has_init) {
 
 				//Launcher Slider
-				int launch_rpm = ace::launcherMotor.get_actual_velocity() * 6;
+				int launch_rpm = 0; //ace::launcherMotor.get_actual_velocity() * 6;
 				lv_bar_set_value(main_bar, launch_rpm);
 				lv_label_set_text(main_bar_label, std::to_string(launch_rpm).c_str());
 				lv_obj_align(main_bar_label, NULL, LV_ALIGN_IN_TOP_LEFT, 50, (1 - ((float)lv_bar_get_value(main_bar) / 3600.0)) * 220 + 5);
@@ -186,28 +186,7 @@ namespace ace::lvgl {
 						"Battery: " + std::to_string(pros::battery::get_capacity()) + "\n" +
 						"Master Battery: " + std::to_string(master.get_battery_capacity()) + "\n" +
 						"Partner Battery: " + std::to_string(partner.get_battery_capacity()) + "\n" +
-						"Theta: " + std::to_string(ace::theta) + "\n" +
-						"ERRNO: " + std::to_string(errno) + "\n" +
-						"Light Sensor: " + std::to_string(ace::lightSensor.get_value())
-						).c_str()
-				);
-
-				// Set temp Text
-				lv_label_set_text(menu_tab3_cont1_labelTemp1,
-					(
-						(std::string)" Launcher: " + std::to_string((int)ace::launcherMotor.get_temp()) + "\n\n" +
-						" Chassis L F: " + std::to_string((int)ace::util::cel_to_faren(chassis.left_motors[0].get_temperature())) + "\n" +
-						" Chassis L B: " + std::to_string((int)ace::util::cel_to_faren(chassis.left_motors[1].get_temperature())) + "\n" +
-						" "
-						).c_str()
-				);
-				lv_label_set_text(menu_tab3_cont2_labelTemp2,
-					(
-						
-						(std::string)" Intake: " + std::to_string((int)ace::intakeMotorLeft.get_temp()) + "\n\n" +
-						" Chassis R F: " + std::to_string((int)ace::util::cel_to_faren(chassis.right_motors[0].get_temperature())) + "\n" +
-						" Chassis R B: " + std::to_string((int)ace::util::cel_to_faren(chassis.right_motors[1].get_temperature())) + "\n" +
-						" " 
+						"ERRNO: " + std::to_string(errno)
 						).c_str()
 				);
 
@@ -251,29 +230,21 @@ namespace ace::lvgl {
 					{
 						lv_obj_set_hidden(menu_tab4_ross, true);
 						lv_obj_set_hidden(menu_tab4_chart, false);
-
-						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_rpm, ace::launcherMotor.get_percent_velocity());
+						// change to motors of choice
+						/*lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_rpm, ace::launcherMotor.get_percent_velocity());
 						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_setrpm, ace::launcherMotor.get_voltage() / 120.0f);
-						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_torque, ace::launcherMotor.get_percent_torque());
+						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_torque, ace::launcherMotor.get_percent_torque());*/
 					}
 					// if intake
 					else if (curr_selected == 2)
 					{
 						lv_obj_set_hidden(menu_tab4_ross, true);
 						lv_obj_set_hidden(menu_tab4_chart, false);
-						//Change for both intake motors?
-						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_rpm, ace::intakeMotorLeft.get_percent_velocity());
+						// change to motors of choice
+						/*lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_rpm, ace::intakeMotorLeft.get_percent_velocity());
 						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_setrpm, ace::intakeMotorLeft.get_voltage() / 120.0f);
-						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_torque, ace::intakeMotorLeft.get_percent_torque());
+						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_torque, ace::intakeMotorLeft.get_percent_torque());*/
 
-					}
-					// if light
-					else if (curr_selected == 3)
-					{
-						lv_obj_set_hidden(menu_tab4_ross, true);
-						lv_obj_set_hidden(menu_tab4_chart, false);
-
-						lv_chart_set_next(menu_tab4_chart, menu_tab4_chart_ser_rpm, ace::lightSensor.get_value());
 					}
 					else {
 						//printf("options in tab4 ddlist no worky :(");
@@ -687,7 +658,7 @@ namespace ace::lvgl {
 		lv_obj_set_size(menu_tab2_btnm_auton, 225, 80);
 		lv_btnm_set_style(menu_tab2_btnm_auton, LV_BTNM_STYLE_BTN_REL, &style_btnm);
 
-		static const char* btnm_alliance_map[] = { "Red", "Blue", ""};
+		static const char* btnm_alliance_map[] = { "Red", "Blue", "" };
 		lv_obj_t* menu_tab2_btnm_alliance = lv_btnm_create(menu_tab2_cont2, NULL);
 		lv_btnm_set_map(menu_tab2_btnm_alliance, btnm_alliance_map);
 		lv_btnm_set_action(menu_tab2_btnm_alliance, menu_btnm_alliance);
