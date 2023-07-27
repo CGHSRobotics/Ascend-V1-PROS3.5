@@ -38,6 +38,8 @@ namespace ace
 	bool partner_connected = false;
 	bool is_red_alliance = false;
 
+	A_Motor Left_Arm(3, false);
+	A_Motor Right_Arm(8, false);
 
 	/* ========================================================================== */
 	/*                              Class Definitions                             */

@@ -14,12 +14,14 @@ extern pros::Controller partner;
 /* ========================================================================== */
 
 /* --------------------------------- Chassis -------------------------------- */
-#define PORT_CHASSIS_L_F -4
-#define PORT_CHASSIS_L_B -2
-#define PORT_CHASSIS_R_F 3
-#define PORT_CHASSIS_R_B 1
+#define PORT_CHASSIS_L_F 1
+#define PORT_CHASSIS_L_B 2
+#define PORT_CHASSIS_R_F -9
+#define PORT_CHASSIS_R_B -10
 
 /* --------------------------------- Motors --------------------------------- */
+
+
 
 /* ---------------------------------- Other --------------------------------- */
 #define PORT_IMU 20
@@ -132,7 +134,8 @@ namespace ace {
 
 
 	/* ------------------------- Other Motors / Devices ------------------------- */
-
+	extern A_Motor Left_Arm;
+	extern A_Motor Right_Arm;
 
 	/* ========================================================================== */
 	/*                                   Buttons                                  */

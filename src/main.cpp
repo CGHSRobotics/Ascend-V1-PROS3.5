@@ -90,6 +90,8 @@ void opcontrol()
 
 	chassis.set_drive_brake(MOTOR_BRAKE_COAST);
 
+bool leftarm = false;
+
 	while (true)
 	{
 
@@ -107,6 +109,13 @@ void opcontrol()
 			ace::is_red_alliance = !ace::is_red_alliance;
 		}
 
+		if (master.get_digital(DIGITAL_Y))
+		{
+			leftarm=true;
+		}else{
+			leftarm=false;
+		}
+		
 
 		/* --------------------------- Chassis Tank Drive --------------------------- */
 		chassis.tank();
@@ -115,7 +124,21 @@ void opcontrol()
 		// for loop exists just so you can break from it if you want to skip all else
 		for (int i = 0; i < 1; i++)
 		{
-			// Do motory things in order of priority
+			
+			// Spin intake motor
+			if (leftarm)
+			{
+				ace::Left_Arm.spin_percent(100);
+				ace::Right_Arm.spin_percent(-100);
+
+			}else{
+				ace::Left_Arm.spin_percent(0);
+				ace::Right_Arm.spin_percent(0);
+			}
+
+			
+			
+
 		}
 
 		/* ------------------------- Controller Screen Draw ------------------------- */
